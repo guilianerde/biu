@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import log from "electron-log";
 
-import { appSettingsStore, userStore, mediaDownloadsStore } from "../store";
+import { appSettingsStore, userStore, mediaDownloadsStore, lyricsCacheStore } from "../store";
 import { channel } from "./channel";
 
 export function registerStoreHandlers() {
@@ -16,6 +16,10 @@ export function registerStoreHandlers() {
 
     if (name === "media-downloads") {
       return mediaDownloadsStore.store;
+    }
+
+    if (name === "lyrics-cache") {
+      return lyricsCacheStore.store;
     }
   });
 
@@ -38,6 +42,10 @@ export function registerStoreHandlers() {
       if (name === "media-downloads") {
         mediaDownloadsStore.set(value);
       }
+
+      if (name === "lyrics-cache") {
+        lyricsCacheStore.set(value);
+      }
     } catch (err) {
       log.error(`[store:set] Error setting store ${name}:`, err);
     }
@@ -54,6 +62,10 @@ export function registerStoreHandlers() {
 
     if (name === "media-downloads") {
       mediaDownloadsStore.clear();
+    }
+
+    if (name === "lyrics-cache") {
+      lyricsCacheStore.clear();
     }
 
     return true;

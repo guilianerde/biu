@@ -13,6 +13,7 @@ export const StoreNameMap: Record<string, StoreName> = {
   AppSettings: "app-settings",
   UserLoginInfo: "user-login-info",
   MediaDownloads: "media-downloads",
+  LyricsCache: "lyrics-cache",
 } as const;
 
 export const appSettingsStore = new Store<{ appSettings: AppSettings }>({
@@ -32,4 +33,35 @@ export const userStore = new Store<UserInfo>({
 
 export const mediaDownloadsStore = new Store<Record<string, FullMediaDownloadTask>>({
   name: StoreNameMap.MediaDownloads,
+});
+
+export type LyricsCacheEntry = {
+  provider: string;
+  raw: string;
+  fetchedAt: number;
+  title?: string;
+  artist?: string;
+};
+
+export type LyricsTitleMapValue = {
+  title: string;
+  artist?: string;
+};
+
+// Backward-compat: older versions stored a raw string as the value.
+export type LyricsTitleMapStoredValue = LyricsTitleMapValue | string;
+
+export type LyricsCacheStoreValue = {
+  titles: Record<string, LyricsTitleMapStoredValue>;
+  lyrics: Record<string, LyricsCacheEntry>;
+  offsets: Record<string, number>;
+};
+
+export const lyricsCacheStore = new Store<LyricsCacheStoreValue>({
+  name: StoreNameMap.LyricsCache,
+  defaults: {
+    titles: {},
+    lyrics: {},
+    offsets: {},
+  },
 });

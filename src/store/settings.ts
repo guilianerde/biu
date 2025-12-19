@@ -31,14 +31,13 @@ export const useSettings = create<AppSettings & SettingsActions>()(
       storage: {
         getItem: async () => {
           const store = await window.electron.getStore<{ appSettings: AppSettings }>("app-settings");
-
-          // 兼容之前的错误默认值
-          if (store?.appSettings?.fontFamily === "system-default") {
-            store.appSettings.fontFamily = "system-ui";
-          }
-
+          console.log("Loaded app settings from store:", JSON.stringify(store));
+          const merged = {
+            ...defaultAppSettings,
+            ...(store?.appSettings ?? {}),
+          };
           return {
-            state: store?.appSettings,
+            state: merged,
           };
         },
 
@@ -66,6 +65,28 @@ export const useSettings = create<AppSettings & SettingsActions>()(
           hiddenMenuKeys: state.hiddenMenuKeys,
           displayMode: state.displayMode,
           ffmpegPath: state.ffmpegPath,
+          lyricsOverlayEnabled: state.lyricsOverlayEnabled,
+          lyricsOverlayAutoShow: state.lyricsOverlayAutoShow,
+          lyricsProvider: state.lyricsProvider,
+          neteaseSearchUrlTemplate: state.neteaseSearchUrlTemplate,
+          neteaseLyricUrlTemplate: state.neteaseLyricUrlTemplate,
+          lyricsTitleResolverEnabled: state.lyricsTitleResolverEnabled,
+          lyricsTitleResolverProvider: state.lyricsTitleResolverProvider,
+          lyricsTitleResolverUrlTemplate: state.lyricsTitleResolverUrlTemplate,
+          lyricsApiUrlTemplate: state.lyricsApiUrlTemplate,
+          lyricsOverlayFontSize: state.lyricsOverlayFontSize,
+          lyricsOverlayOpacity: state.lyricsOverlayOpacity,
+          lyricsOverlayContentMaxWidth: state.lyricsOverlayContentMaxWidth,
+          lyricsOverlayContentHeight: state.lyricsOverlayContentHeight,
+          lyricsOverlayWindowWidth: state.lyricsOverlayWindowWidth,
+          lyricsOverlayWindowHeight: state.lyricsOverlayWindowHeight,
+          lyricsOverlayBackgroundColor: state.lyricsOverlayBackgroundColor,
+          lyricsOverlayBackgroundOpacity: state.lyricsOverlayBackgroundOpacity,
+          lyricsOverlayFontColor: state.lyricsOverlayFontColor,
+          lyricsOverlayFontOpacity: state.lyricsOverlayFontOpacity,
+          lyricsOverlayVisibleLines: state.lyricsOverlayVisibleLines,
+          lyricsOverlayPanelX: state.lyricsOverlayPanelX,
+          lyricsOverlayPanelY: state.lyricsOverlayPanelY,
         };
       },
     },
