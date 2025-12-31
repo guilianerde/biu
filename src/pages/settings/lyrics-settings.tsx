@@ -134,7 +134,7 @@ const LyricsSettings = ({ control }: LyricsSettingsProps) => {
         <div className="flex w-full items-center justify-between">
           <div className="mr-6 space-y-1">
             <div className="text-medium font-medium">纠正方式</div>
-            <div className="text-sm text-zinc-500">Ark 通过环境变量配置（不写入本地设置文件）</div>
+            <div className="text-sm text-zinc-500">Ark 参数在下方配置并保存在本地设置</div>
           </div>
           <div className="flex w-[360px] justify-end">
             <Controller
@@ -152,17 +152,80 @@ const LyricsSettings = ({ control }: LyricsSettingsProps) => {
       ) : null}
 
       {lyricsTitleResolverEnabled && lyricsTitleResolverProvider === "ark" ? (
-        <div className="flex w-full items-center justify-between">
-          <div className="mr-6 space-y-1">
-            <div className="text-medium font-medium">Ark 环境变量</div>
-            <div className="text-sm text-zinc-500">
-              需要在启动前设置：ARK_API_KEY（必填），可选：ARK_MODEL/ARK_ENDPOINT/ARK_REASONING_EFFORT
+        <>
+          <div className="flex w-full items-center justify-between">
+            <div className="mr-6 space-y-1">
+              <div className="text-medium font-medium">Ark API Key</div>
+              <div className="text-sm text-zinc-500">用于调用 Ark/Doubao 模型（必填）</div>
+            </div>
+            <div className="w-[360px]">
+              <Controller
+                control={control}
+                name="lyricsArkApiKey"
+                render={({ field }) => (
+                  <Input
+                    placeholder="请输入 ARK_API_KEY"
+                    type="password"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  />
+                )}
+              />
             </div>
           </div>
-          <div className="w-[360px] text-right text-sm text-zinc-500">
-            例如：PowerShell `setx ARK_API_KEY "你的key"`
+
+          <div className="flex w-full items-center justify-between">
+            <div className="mr-6 space-y-1">
+              <div className="text-medium font-medium">Ark 模型</div>
+              <div className="text-sm text-zinc-500">默认：doubao-seed-1-6-251015</div>
+            </div>
+            <div className="w-[360px]">
+              <Controller
+                control={control}
+                name="lyricsArkModel"
+                render={({ field }) => (
+                  <Input placeholder="doubao-seed-1-6-251015" value={field.value} onValueChange={field.onChange} />
+                )}
+              />
+            </div>
           </div>
-        </div>
+
+          <div className="flex w-full items-center justify-between">
+            <div className="mr-6 space-y-1">
+              <div className="text-medium font-medium">Ark Endpoint</div>
+              <div className="text-sm text-zinc-500">默认：ark.cn-beijing.volces.com</div>
+            </div>
+            <div className="w-[360px]">
+              <Controller
+                control={control}
+                name="lyricsArkEndpoint"
+                render={({ field }) => (
+                  <Input
+                    placeholder="https://ark.cn-beijing.volces.com/api/v3/chat/completions"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="flex w-full items-center justify-between">
+            <div className="mr-6 space-y-1">
+              <div className="text-medium font-medium">reasoning_effort</div>
+              <div className="text-sm text-zinc-500">建议值：low / medium / high</div>
+            </div>
+            <div className="w-[360px]">
+              <Controller
+                control={control}
+                name="lyricsArkReasoningEffort"
+                render={({ field }) => (
+                  <Input placeholder="medium" value={field.value} onValueChange={field.onChange} />
+                )}
+              />
+            </div>
+          </div>
+        </>
       ) : null}
 
       {lyricsTitleResolverEnabled && lyricsTitleResolverProvider === "custom" ? (

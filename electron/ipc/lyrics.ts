@@ -2,7 +2,7 @@ import { ipcMain } from "electron";
 import log from "electron-log";
 import got from "got";
 
-import { lyricsCacheStore } from "../store";
+import { appSettingsStore, lyricsCacheStore, storeKey } from "../store";
 import { channel } from "./channel";
 
 type SearchLyricsParams = {
@@ -127,13 +127,14 @@ function extractArkMeta(raw: string): { title: string; artist?: string } {
 }
 
 async function resolveSongMetaViaArk(params: { title?: string; artist?: string }) {
-  const apiKey = process.env.ARK_API_KEY?.trim();
-  const endpoint = process.env.ARK_ENDPOINT?.trim() || "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
-  const model = process.env.ARK_MODEL?.trim() || "doubao-seed-1-6-251015";
-  const reasoningEffort = process.env.ARK_REASONING_EFFORT?.trim() || "medium";
+  const settings = appSettingsStore.get(storeKey.appSettings);
+  const apiKey = settings?.lyricsArkApiKey?.trim();
+  const endpoint = settings?.lyricsArkEndpoint?.trim() || "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
+  const model = settings?.lyricsArkModel?.trim() || "doubao-seed-1-6-251015";
+  const reasoningEffort = settings?.lyricsArkReasoningEffort?.trim() || "medium";
 
   if (!apiKey) {
-    log.warn("[lyrics] ARK_API_KEY is not set; skip Ark title resolving");
+    log.warn("[lyrics] Ark API key is not set in settings; skip title resolving");
     return null;
   }
 

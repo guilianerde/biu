@@ -30,6 +30,14 @@ interface AppSettings {
   lyricsTitleResolverEnabled: boolean;
   /** 歌名纠正提供方 */
   lyricsTitleResolverProvider: LyricsTitleResolverProvider;
+  /** Ark：API Key（可为空） */
+  lyricsArkApiKey: string;
+  /** Ark：模型名 */
+  lyricsArkModel: string;
+  /** Ark：API Endpoint */
+  lyricsArkEndpoint: string;
+  /** Ark：reasoning_effort */
+  lyricsArkReasoningEffort: string;
   /**
    * 歌名纠正 URL 模板，支持占位符：
    * - {title}：标题
