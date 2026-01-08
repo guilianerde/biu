@@ -42,6 +42,8 @@ memberRequest.interceptors.request.use(requestInterceptors);
 
 apiRequest.interceptors.response.use(geetestInterceptors);
 
+apiRequest.interceptors.response.use(geetestInterceptors);
+
 biliRequest.interceptors.response.use(res => res.data);
 apiRequest.interceptors.response.use(res => res.data);
 passportRequest.interceptors.response.use(res => res.data);

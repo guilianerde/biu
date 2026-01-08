@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { addToast } from "@heroui/react";
-
 import { getPassportLoginCaptcha } from "@/service/passport-login-captcha";
 
 import { loadGeetestScript, verifyGeetest, type GeetestResult } from "../utils/geetest";
