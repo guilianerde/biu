@@ -405,7 +405,7 @@ const LyricsSettings = ({ control }: LyricsSettingsProps) => {
           <Button variant="flat" onPress={() => window.electron.openLyricsOverlay()}>
             打开
           </Button>
-          <Button variant="flat" onPress={() => window.electron.closeLyricsOverlay()}>
+          <Button variant="flat" onPress={() => void window.electron.closeLyricsOverlay()}>
             关闭
           </Button>
         </div>

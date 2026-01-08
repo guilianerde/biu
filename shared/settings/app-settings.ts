@@ -20,12 +20,6 @@ export const defaultAppSettings: AppSettings = {
     password: "",
   },
   sideMenuCollapsed: false,
-};
-
-export const lightThemeColors = {
-  backgroundColor: "#f5f5f5",
-  contentBackgroundColor: "#ffffff",
-  foregroundColor: "#000000",
   lyricsOverlayEnabled: false,
   lyricsOverlayAutoShow: true,
   lyricsProvider: "netease",
@@ -53,6 +47,12 @@ export const lightThemeColors = {
   lyricsOverlayVisibleLines: 3,
   lyricsOverlayPanelX: 16,
   lyricsOverlayPanelY: 56,
+};
+
+export const lightThemeColors = {
+  backgroundColor: "#f5f5f5",
+  contentBackgroundColor: "#ffffff",
+  foregroundColor: "#000000",
 };
 
 export const darkThemeColors = {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router";
 
 import { useShallow } from "zustand/react/shallow";
 
@@ -23,6 +24,7 @@ function resolveTheme(theme: ThemeMode, systemTheme?: "light" | "dark") {
 }
 
 const Theme = ({ children }: Props) => {
+  const location = useLocation();
   const { themeMode, fontFamily, primaryColor, borderRadius } = useSettings(
     useShallow(s => ({
       themeMode: s.themeMode,
@@ -31,6 +33,13 @@ const Theme = ({ children }: Props) => {
       borderRadius: s.borderRadius,
     })),
   );
+  const isLyricsOverlay =
+    location.pathname === "/lyrics-overlay" ||
+    location.pathname === "/lyrics-overlay-settings" ||
+    location.hash === "#/lyrics-overlay" ||
+    location.hash === "#/lyrics-overlay-settings" ||
+    location.hash === "#lyrics-overlay" ||
+    location.hash === "#lyrics-overlay-settings";
 
   const [systemTheme, setSystemTheme] = useState<"light" | "dark" | undefined>(undefined);
 
@@ -94,15 +103,20 @@ const Theme = ({ children }: Props) => {
     bodyStyle.setProperty("--radius", radius);
     const validFontFamily = fontFamily === "system-default" ? "system-ui" : fontFamily;
     bodyStyle.fontFamily = validFontFamily || bodyStyle.fontFamily;
-  }, [fontFamily, primaryColor, borderRadius, themeMode, systemTheme]);
+    bodyStyle.backgroundColor = isLyricsOverlay ? "transparent" : "";
+  }, [fontFamily, primaryColor, borderRadius, themeMode, systemTheme, isLyricsOverlay]);
 
   return (
     <main
-      className={`bg-background text-foreground h-screen w-screen overflow-hidden ${resolveTheme(themeMode, systemTheme)}`}
+      className={`${isLyricsOverlay ? "text-foreground" : "bg-background text-foreground"} h-screen w-screen overflow-hidden ${resolveTheme(
+        themeMode,
+        systemTheme,
+      )}`}
       style={{
         fontFamily: fontFamily === "system-default" ? "system-ui" : fontFamily,
         ["--heroui-primary" as any]: hexToHsl(primaryColor),
         ["--heroui-radius-medium" as any]: `${borderRadius}px`,
+        backgroundColor: isLyricsOverlay ? "transparent" : undefined,
       }}
     >
       {children}

@@ -32,6 +32,7 @@ import UpdateCheckButton from "@/components/update-check-button";
 import { defaultAppSettings } from "@shared/settings/app-settings";
 
 import ImportExport from "./export-import";
+import LyricsSettings from "./lyrics-settings";
 
 type SystemSettingsTabProps = {
   appVersion: string;
@@ -281,7 +282,7 @@ export const SystemSettingsTab = ({
           />
         </div>
       </div>
-
+      <LyricsSettings control={control} />
       <Divider />
       <h2>下载</h2>
       <div className="flex w-full items-center justify-between">

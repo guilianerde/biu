@@ -8,6 +8,8 @@ import { getActiveLrcIndex } from "@/common/utils/lrc";
 import { useLyrics } from "@/store/lyrics";
 import { useSettings } from "@/store/settings";
 
+import { useStyle } from "./use-style";
+
 type LyricsOverlayStateMessage =
   | {
       from: "overlay";
@@ -78,6 +80,7 @@ function hexToRgb(hex: string) {
 }
 
 export default function LyricsOverlay() {
+  useStyle();
   const bcRef = useRef<BroadcastChannel | null>(null);
   const [playerState, setPlayerState] = useState<{
     mediaKey?: string;

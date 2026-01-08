@@ -149,6 +149,7 @@ export function LyricsOverlayBridge() {
   const neteaseLyricUrlTemplate = useSettings(s => s.neteaseLyricUrlTemplate);
   const lyricsTitleResolverEnabled = useSettings(s => s.lyricsTitleResolverEnabled);
   const lyricsTitleResolverProvider = useSettings(s => s.lyricsTitleResolverProvider);
+  const lyricsArkApiKey = useSettings(s => s.lyricsArkApiKey);
   const lyricsTitleResolverUrlTemplate = useSettings(s => s.lyricsTitleResolverUrlTemplate);
   const lyricsApiUrlTemplate = useSettings(s => s.lyricsApiUrlTemplate);
 
@@ -166,7 +167,7 @@ export function LyricsOverlayBridge() {
 
       window.electron.isLyricsOverlayOpen().then(isOpen => {
         if (isOpen) {
-          window.electron.closeLyricsOverlay();
+          void window.electron.closeLyricsOverlay();
         }
       });
 
@@ -194,78 +195,82 @@ export function LyricsOverlayBridge() {
     };
 
     bcRef.current.onmessage = ev => {
-      console.log("bcRef::::::", JSON.stringify(ev.data));
       const msg = ev.data as LyricsOverlayMessage;
       if (!msg || msg.from !== "overlay") return;
+      const overlayMsg = msg as Extract<LyricsOverlayMessage, { from: "overlay" }>;
 
-      if (msg.data?.type === "settings:update") {
-        const patch = (msg.data as any)?.patch as Partial<AppSettings> | undefined;
-        if (!patch || typeof patch !== "object") return;
-        // 只允许 overlay 更新与 overlay 本身展示相关的字段
-        const safePatch: Partial<AppSettings> = {};
-        if (typeof patch.lyricsOverlayFontSize === "number")
-          safePatch.lyricsOverlayFontSize = patch.lyricsOverlayFontSize;
-        if (typeof patch.lyricsOverlayOpacity === "number") safePatch.lyricsOverlayOpacity = patch.lyricsOverlayOpacity;
-        if (typeof patch.lyricsOverlayContentMaxWidth === "number")
-          safePatch.lyricsOverlayContentMaxWidth = patch.lyricsOverlayContentMaxWidth;
-        if (typeof patch.lyricsOverlayContentHeight === "number")
-          safePatch.lyricsOverlayContentHeight = patch.lyricsOverlayContentHeight;
-        if (typeof patch.lyricsOverlayWindowWidth === "number")
-          safePatch.lyricsOverlayWindowWidth = patch.lyricsOverlayWindowWidth;
-        if (typeof patch.lyricsOverlayWindowHeight === "number")
-          safePatch.lyricsOverlayWindowHeight = patch.lyricsOverlayWindowHeight;
-        if (typeof patch.lyricsOverlayBackgroundColor === "string")
-          safePatch.lyricsOverlayBackgroundColor = patch.lyricsOverlayBackgroundColor;
-        if (typeof patch.lyricsOverlayBackgroundOpacity === "number")
-          safePatch.lyricsOverlayBackgroundOpacity = patch.lyricsOverlayBackgroundOpacity;
-        if (typeof patch.lyricsOverlayFontColor === "string")
-          safePatch.lyricsOverlayFontColor = patch.lyricsOverlayFontColor;
-        if (typeof patch.lyricsOverlayFontOpacity === "number")
-          safePatch.lyricsOverlayFontOpacity = patch.lyricsOverlayFontOpacity;
-        if (typeof patch.lyricsOverlayVisibleLines === "number")
-          safePatch.lyricsOverlayVisibleLines = patch.lyricsOverlayVisibleLines;
-        if (typeof patch.lyricsOverlayPanelX === "number") safePatch.lyricsOverlayPanelX = patch.lyricsOverlayPanelX;
-        if (typeof patch.lyricsOverlayPanelY === "number") safePatch.lyricsOverlayPanelY = patch.lyricsOverlayPanelY;
+      switch (overlayMsg.data.type) {
+        case "settings:update": {
+          const patch = overlayMsg.data.patch as Partial<AppSettings> | undefined;
+          if (!patch || typeof patch !== "object") return;
+          // 只允许 overlay 更新与 overlay 本身展示相关的字段
+          const safePatch: Partial<AppSettings> = {};
+          if (typeof patch.lyricsOverlayFontSize === "number")
+            safePatch.lyricsOverlayFontSize = patch.lyricsOverlayFontSize;
+          if (typeof patch.lyricsOverlayOpacity === "number")
+            safePatch.lyricsOverlayOpacity = patch.lyricsOverlayOpacity;
+          if (typeof patch.lyricsOverlayContentMaxWidth === "number")
+            safePatch.lyricsOverlayContentMaxWidth = patch.lyricsOverlayContentMaxWidth;
+          if (typeof patch.lyricsOverlayContentHeight === "number")
+            safePatch.lyricsOverlayContentHeight = patch.lyricsOverlayContentHeight;
+          if (typeof patch.lyricsOverlayWindowWidth === "number")
+            safePatch.lyricsOverlayWindowWidth = patch.lyricsOverlayWindowWidth;
+          if (typeof patch.lyricsOverlayWindowHeight === "number")
+            safePatch.lyricsOverlayWindowHeight = patch.lyricsOverlayWindowHeight;
+          if (typeof patch.lyricsOverlayBackgroundColor === "string")
+            safePatch.lyricsOverlayBackgroundColor = patch.lyricsOverlayBackgroundColor;
+          if (typeof patch.lyricsOverlayBackgroundOpacity === "number")
+            safePatch.lyricsOverlayBackgroundOpacity = patch.lyricsOverlayBackgroundOpacity;
+          if (typeof patch.lyricsOverlayFontColor === "string")
+            safePatch.lyricsOverlayFontColor = patch.lyricsOverlayFontColor;
+          if (typeof patch.lyricsOverlayFontOpacity === "number")
+            safePatch.lyricsOverlayFontOpacity = patch.lyricsOverlayFontOpacity;
+          if (typeof patch.lyricsOverlayVisibleLines === "number")
+            safePatch.lyricsOverlayVisibleLines = patch.lyricsOverlayVisibleLines;
+          if (typeof patch.lyricsOverlayPanelX === "number") safePatch.lyricsOverlayPanelX = patch.lyricsOverlayPanelX;
+          if (typeof patch.lyricsOverlayPanelY === "number") safePatch.lyricsOverlayPanelY = patch.lyricsOverlayPanelY;
 
-        if (Object.keys(safePatch).length > 0) {
-          useSettings.getState().update(safePatch);
+          if (Object.keys(safePatch).length > 0) {
+            useSettings.getState().update(safePatch);
+          }
+          return;
         }
-        return;
+        case "lyrics:manual-update": {
+          const mediaKey = currentMediaKeyRef.current;
+          if (!mediaKey) return;
+          void (async () => {
+            const current = await getLyricsTitleMapEntry(mediaKey);
+            const { title, artist } = overlayMsg.data;
+            const hasTitle = typeof title === "string";
+            const hasArtist = typeof artist === "string";
+            const nextTitle = hasTitle ? title.trim() : current?.title;
+            const nextArtist = hasArtist ? artist.trim() : current?.artist;
+            await setLyricsTitleMapEntry(mediaKey, { title: nextTitle, artist: nextArtist });
+            lastFetchedKeyRef.current = undefined;
+            await fetchLyricsForStateRef.current(usePlayList.getState(), { force: true, skipCache: true });
+          })();
+          return;
+        }
+        case "lyrics:refresh":
+          lastFetchedKeyRef.current = undefined;
+          void fetchLyricsForStateRef.current(usePlayList.getState(), { force: true, skipCache: true });
+          return;
+        case "offset:update": {
+          const { mediaKey, offsetSeconds } = overlayMsg.data;
+          if (typeof mediaKey !== "string" || !mediaKey) return;
+          if (typeof offsetSeconds !== "number" || Number.isNaN(offsetSeconds)) return;
+          const clamped = Math.max(-600, Math.min(600, Math.round(offsetSeconds * 100) / 100));
+          currentOffsetRef.current = clamped;
+          void setCachedLyricsOffset(mediaKey, clamped);
+          return;
+        }
+        case "init":
+          break;
+        default:
+          return;
       }
 
-      if (msg.data?.type === "lyrics:manual-update") {
-        const mediaKey = currentMediaKeyRef.current;
-        if (!mediaKey) return;
-        void (async () => {
-          const current = await getLyricsTitleMapEntry(mediaKey);
-          const nextTitle = current?.title;
-          const nextArtist = current?.artist;
-          await setLyricsTitleMapEntry(mediaKey, { title: nextTitle, artist: nextArtist });
-          await fetchLyricsForStateRef.current(usePlayList.getState(), { force: true, skipCache: true });
-        })();
-        return;
-      }
-
-      if (msg.data?.type === "lyrics:refresh") {
-        void fetchLyricsForStateRef.current(usePlayList.getState(), { force: true, skipCache: true });
-        return;
-      }
-
-      if (msg.data?.type === "offset:update") {
-        const mediaKey = (msg.data as any)?.mediaKey;
-        const offsetSeconds = (msg.data as any)?.offsetSeconds;
-        if (typeof mediaKey !== "string" || !mediaKey) return;
-        if (typeof offsetSeconds !== "number" || Number.isNaN(offsetSeconds)) return;
-        const clamped = Math.max(-600, Math.min(600, Math.round(offsetSeconds * 100) / 100));
-        currentOffsetRef.current = clamped;
-        void setCachedLyricsOffset(mediaKey, clamped);
-        return;
-      }
-
-      if (msg.data?.type !== "init") return;
-      console.log("meta:::::init");
       void (async () => {
-        console.log("meta:::::111111");
         await reloadLyricsTitleMap();
         const play = usePlayList.getState();
         const playItem = play.getPlayItem();
@@ -344,8 +349,6 @@ export function LyricsOverlayBridge() {
           mappedTitle: mappedMeta?.title,
           mappedArtist: mappedMeta?.artist,
         });
-
-        console.log("meta:::::", JSON.stringify(fallbackArtist));
       })();
     };
 
@@ -502,9 +505,20 @@ export function LyricsOverlayBridge() {
   useEffect(() => {
     if (!lyricsOverlayEnabled || !lyricsOverlayAutoShow) return;
 
+    const initial = usePlayList.getState();
+    if (initial.playId && initial.isPlaying) {
+      window.electron.isLyricsOverlayOpen().then(isOpen => {
+        if (!isOpen) {
+          window.electron.openLyricsOverlay();
+        }
+      });
+    }
+
     const unsubscribe = usePlayList.subscribe((state, prev) => {
       if (!state.playId) return;
-      if (prev.isPlaying || !state.isPlaying) return;
+      const startedPlaying = !prev.isPlaying && state.isPlaying;
+      const switchedTrack = state.isPlaying && state.playId !== prev.playId;
+      if (!startedPlaying && !switchedTrack) return;
 
       window.electron.isLyricsOverlayOpen().then(isOpen => {
         if (!isOpen) {
@@ -562,6 +576,13 @@ export function LyricsOverlayBridge() {
       if (!options?.force && lastFetchedKeyRef.current === fetchKey) return;
       if (inFlightRef.current.has(fetchKey)) return;
 
+      if (lyricsOverlayAutoShow) {
+        const isOpen = await window.electron.isLyricsOverlayOpen();
+        if (!isOpen) {
+          await window.electron.openLyricsOverlay();
+        }
+      }
+
       const cached = options?.skipCache ? null : cacheKey ? await getCachedLyrics(cacheKey, lyricsProvider) : null;
       if (cached?.raw?.trim()) {
         useLyrics.getState().setLyrics({ title, artist, raw: cached.raw });
@@ -570,13 +591,6 @@ export function LyricsOverlayBridge() {
       }
 
       inFlightRef.current.add(fetchKey);
-
-      if (lyricsOverlayAutoShow) {
-        const isOpen = await window.electron.isLyricsOverlayOpen();
-        if (!isOpen) {
-          await window.electron.openLyricsOverlay();
-        }
-      }
 
       if (!title) {
         useLyrics.getState().reset();
@@ -589,15 +603,26 @@ export function LyricsOverlayBridge() {
       try {
         let resolvedTitle = title;
         let resolvedArtist = artist;
+        let resolverHit = false;
         if (mappedTitle) resolvedTitle = mappedTitle;
         if (mappedArtist) resolvedArtist = mappedArtist;
         if (lyricsTitleResolverEnabled && !mappedTitle && !mappedArtist) {
           const cacheKey = baseKey;
           if (lyricsTitleResolverProvider === "ark") {
-            const arkHit = await window.electron.resolveSongTitleArk({ cacheKey, title, artist });
-            console.log("Resolved title arkHit:", arkHit);
-            if (arkHit?.title?.trim()) resolvedTitle = arkHit.title.trim();
-            if (arkHit?.artist?.trim()) resolvedArtist = arkHit.artist.trim();
+            if (lyricsArkApiKey?.trim()) {
+              const arkHit = await window.electron.resolveSongTitleArk({ cacheKey, title, artist });
+              console.log("Resolved title arkHit:", arkHit);
+              if (arkHit?.title?.trim()) {
+                resolvedTitle = arkHit.title.trim();
+                resolverHit = true;
+              }
+              if (arkHit?.artist?.trim()) {
+                resolvedArtist = arkHit.artist.trim();
+                resolverHit = true;
+              }
+            } else {
+              console.warn("[lyrics] Ark API key missing; skip title resolving");
+            }
           } else if (lyricsTitleResolverUrlTemplate?.trim()) {
             const hit = await window.electron.resolveSongTitle({
               cacheKey,
@@ -605,9 +630,14 @@ export function LyricsOverlayBridge() {
               title,
               artist,
             });
-            if (typeof hit === "string" && hit.trim()) resolvedTitle = hit.trim();
+            if (typeof hit === "string" && hit.trim()) {
+              resolvedTitle = hit.trim();
+              resolverHit = true;
+            }
           }
-          await setLyricsTitleMapEntry(baseKey, { title: resolvedTitle, artist: resolvedArtist });
+          if (resolverHit) {
+            await setLyricsTitleMapEntry(baseKey, { title: resolvedTitle, artist: resolvedArtist });
+          }
         }
         if (mappedTitle || mappedArtist) {
           await setLyricsTitleMapEntry(baseKey, { title: resolvedTitle, artist: resolvedArtist });
@@ -690,6 +720,7 @@ export function LyricsOverlayBridge() {
       neteaseLyricUrlTemplate,
       lyricsTitleResolverEnabled,
       lyricsTitleResolverProvider,
+      lyricsArkApiKey,
       lyricsTitleResolverUrlTemplate,
       lyricsApiUrlTemplate,
     ],
@@ -703,9 +734,24 @@ export function LyricsOverlayBridge() {
     if (!lyricsOverlayEnabled) return;
 
     const unsubscribe = usePlayList.subscribe((state, prev) => {
+      const getMeta = (s: ReturnType<typeof usePlayList.getState>) => {
+        const item = s.list.find(entry => entry.id === s.playId);
+        const title = item?.pageTitle || item?.title;
+        const artist = item?.ownerName;
+        const mediaKey = buildMediaKey(item);
+        return {
+          hasMeta: Boolean(title || artist),
+          key: `${s.playId ?? ""}::${mediaKey ?? ""}::${title ?? ""}::${artist ?? ""}`,
+        };
+      };
+
+      const prevMeta = getMeta(prev);
+      const nextMeta = getMeta(state);
       const playIdChanged = !!state.playId && state.playId !== prev.playId;
       const startedPlaying = !!state.playId && !prev.isPlaying && state.isPlaying;
-      if (!playIdChanged && !startedPlaying) return;
+
+      if (!nextMeta.hasMeta) return;
+      if (!playIdChanged && !startedPlaying && nextMeta.key === prevMeta.key) return;
       void fetchLyricsForState(state);
     });
 
